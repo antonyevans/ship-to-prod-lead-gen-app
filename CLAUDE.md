@@ -4,7 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`ship-to-prod-lead-gen-app` — a lead generation application. This repository is currently in its initial state; update this file as the stack and architecture are established.
+`ship-to-prod-lead-gen-app` — AI Lead Gen Agent built for the Ship to Prod Hackathon (April 24, 2026).
+Pain-signal-first outreach: TinyFish finds a live pain signal per prospect, Claude generates a
+personalized script, VAPI places the call. Full pipeline runs end-to-end in under 3 minutes.
+
+**Sponsor tools:** Guild (agent orchestration) + Insforge (backend/DB) + TinyFish (web research) + VAPI (voice calls)
+
+**Deadline:** 4:30 PM April 24, 2026. Submit via Devpost: https://bit.ly/devpost-apr
+
+## Planning Files
+
+All planning documents live in `docs/planning/`:
+
+- `docs/planning/DESIGN.md` — full architecture design, data flows, test plan, failure modes,
+  performance budget, and review findings. **Start here for any implementation question.**
+- `docs/planning/TEAM_PLAN.md` — team roles (Nils0217/TinyFish, antonyevans/Guild+Insforge,
+  Daniel Goodwyn/VAPI), submission checklist, and missing parts to complete.
+
+When implementing anything, read `docs/planning/DESIGN.md` first. The architecture is locked —
+don't deviate without updating the doc.
 
 ## Commands
 
