@@ -1,44 +1,26 @@
 import { createClient } from "@insforge/sdk";
 
-let serverClient: ReturnType<typeof createClient> | null = null;
-let serverClientConfig: { baseUrl: string; anonKey: string } | null = null;
-
-function getInsforgeConfig() {
+function getConfig() {
   const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY;
-
-  if (!baseUrl || !anonKey) {
+  const serviceKey = process.env.INSFORGE_SERVICE_KEY;
+  if (!baseUrl || !serviceKey) {
     throw new Error(
-      "Missing InsForge configuration. Set NEXT_PUBLIC_INSFORGE_URL and NEXT_PUBLIC_INSFORGE_ANON_KEY.",
+      "Missing InsForge config. Set NEXT_PUBLIC_INSFORGE_URL and INSFORGE_SERVICE_KEY.",
     );
   }
-
-  return { baseUrl, anonKey };
+  return { baseUrl, serviceKey };
 }
 
 export function createInsforgeServerClient(options?: { accessToken?: string }) {
-  const { baseUrl, anonKey } = getInsforgeConfig();
-
+  const { baseUrl, serviceKey } = getConfig();
   return createClient({
     baseUrl,
-    anonKey,
+    anonKey: serviceKey,
     isServerMode: true,
     ...(options?.accessToken ? { edgeFunctionToken: options.accessToken } : {}),
   });
 }
 
 export function getInsforgeServerClient() {
-  const config = getInsforgeConfig();
-
-  if (
-    !serverClient ||
-    !serverClientConfig ||
-    serverClientConfig.baseUrl !== config.baseUrl ||
-    serverClientConfig.anonKey !== config.anonKey
-  ) {
-    serverClient = createInsforgeServerClient();
-    serverClientConfig = config;
-  }
-
-  return serverClient;
+  return createInsforgeServerClient();
 }
