@@ -1,5 +1,6 @@
 import { publish } from "@/lib/run-store";
 import { createInsforgeServerClient } from "@/lib/insforge";
+import { findProspects, findPainSignal } from "@/lib/tinyfish";
 import type { PipelineConfig, Script } from "@/lib/pipeline-types";
 
 export async function POST(request: Request) {
@@ -63,72 +64,86 @@ async function saveCallStatus(runId: string, prospectIdx: number, status: string
 }
 
 async function runPipeline(runId: string, service: string, icp: string) {
-  // TODO Hour 4: replace with real TinyFish search + fetch
-  await simulatePipeline(runId);
-}
+  // Step 1: find 3 prospects via TinyFish Google search
+  const raw = await findProspects(icp);
 
-async function simulatePipeline(runId: string) {
-  const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  if (raw.length === 0) {
+    publish(runId, { type: "error", message: "TinyFish found no prospects for that ICP." });
+    publish(runId, { type: "done" });
+    return;
+  }
 
-  const prospects = [
-    { name: "Memphis CPA Group", phone: "+19015550101", website: "https://memphiscpagroup.com" },
-    { name: "Shelby Tax Advisors", phone: "+19015550142", website: "https://shelbytax.com" },
-    { name: "River City Accounting", phone: "+19015550187", website: "https://rivercityacct.com" },
-  ];
-
-  const painSignals = [
-    "Yelp review: 'Called 3 times after 5pm — always goes to voicemail'",
-    "Google review: 'Took 2 days to get a call back during tax season'",
-    null,
-  ];
-
-  // Prospect discovery
-  for (let i = 0; i < prospects.length; i++) {
-    await delay(800);
+  // Publish prospect_found for each result, save to DB
+  for (let i = 0; i < raw.length; i++) {
     publish(runId, {
       type: "prospect_found",
       index: i,
-      name: prospects[i].name,
-      phone: prospects[i].phone,
-      website: prospects[i].website,
+      name: raw[i].name,
+      phone: raw[i].phone,
+      website: raw[i].website,
     });
-    await saveProspect(runId, i, prospects[i]);
+    await saveProspect(runId, i, raw[i]);
+  }
 
-    if (painSignals[i]) {
-      await delay(600);
-      publish(runId, { type: "pain_signal", index: i, painSignal: painSignals[i]! });
+  // Step 2: parallel pain signal research — each call browses Google Maps → Yelp → website
+  const painSignalTasks = raw.map((p, i) =>
+    findPainSignal(p.name, p.website, service)
+      .then((signal) => {
+        if (signal) {
+          publish(runId, { type: "pain_signal", index: i, painSignal: signal });
+        }
+        return { index: i, signal };
+      })
+      .catch((err) => {
+        console.error(`Pain signal failed for ${p.name}:`, err);
+        return { index: i, signal: null };
+      })
+  );
+
+  const painResults = await Promise.all(painSignalTasks);
+
+  // Save pain signals to DB
+  for (const { index, signal } of painResults) {
+    if (signal) {
+      await saveProspect(runId, index, {
+        ...raw[index],
+        pain_signal: signal,
+      });
     }
   }
 
-  // Script generation
-  for (let i = 0; i < prospects.length; i++) {
-    await delay(400);
+  // Step 3: script generation (template — Claude wiring is next)
+  for (let i = 0; i < raw.length; i++) {
     publish(runId, { type: "script_generating", index: i });
-    await delay(1200);
 
+    const painSignal = painResults[i]?.signal ?? null;
     const script: Script = {
-      opener: `Hi, this is Alex calling from AI Scheduling`,
-      pain_hook: i < 2 ? `I saw a review mentioning calls go to voicemail after hours` : "",
-      service_pitch: `We book client consultations automatically — 24/7, no missed calls`,
-      objection_answer: `Takes under 10 minutes to set up, no contracts`,
-      cta: `Can I show you how it works for ${prospects[i].name}?`,
+      opener: `Hi, this is calling about ${raw[i].name}`,
+      pain_hook: painSignal
+        ? `I came across something specific about your business — ${painSignal}`
+        : "",
+      service_pitch: service,
+      objection_answer: "Takes under 10 minutes to set up, no contracts",
+      cta: `Can I show you how it works for ${raw[i].name}?`,
     };
 
     publish(runId, { type: "script_ready", index: i, script });
     await saveProspect(runId, i, {
-      ...prospects[i],
-      pain_signal: painSignals[i] ?? undefined,
+      ...raw[i],
+      pain_signal: painSignal ?? undefined,
       script,
     });
   }
 
-  // VAPI call for prospect #1
-  const callStatuses = ["initiated", "ringing", "answered", "completed"] as const;
-  const delays = [500, 1500, 2000, 3000];
-
-  for (let s = 0; s < callStatuses.length; s++) {
-    await delay(delays[s]);
-    const status = callStatuses[s];
+  // Step 4: VAPI call for prospect 0 (simulated — real VAPI wiring is next)
+  const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  for (const [status, wait] of [
+    ["initiated", 500],
+    ["ringing", 1500],
+    ["answered", 2000],
+    ["completed", 3000],
+  ] as const) {
+    await delay(wait);
     publish(runId, { type: "call_status", index: 0, status });
     await saveCallStatus(runId, 0, status);
   }
