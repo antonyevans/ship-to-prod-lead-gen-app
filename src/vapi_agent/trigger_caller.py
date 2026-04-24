@@ -21,31 +21,33 @@ def trigger_outbound_call(customer_number: str, customer_name: str, product_offe
     }
 
     payload = {
-        "phoneNumber": {
-            "twilioPhoneNumber": TWILIO_PHONE_NUMBER, 
-            "phoneNumber": customer_number
+        "phoneNumberId": os.getenv("VAPI_PHONE_NUMBER_ID", "YOUR_PHONE_NUMBER_ID"),
+        "customer": {
+            "number": customer_number
         },
-        "model": {
-            "provider": "openai",
-            "model": "gpt-4-turbo",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        f"You are an energetic sales agent representing our Lead Gen team. "
-                        f"The prospect you are speaking to is {customer_name}. "
-                        f"Your core objective is to pitch the following product offering: '{product_offering}'. "
-                        f"Target Context: We focus tightly on '{ideal_client_profile}'. "
-                        f"At the end of the call, try to extract their budget requirements or explicitly ask "
-                        f"what parameters they would need for a project quote so we can file it securely."
-                    )
-                }
-            ]
-        },
-        "serverUrl": VAPI_SERVER_URL,
-        "voice": {
-            "provider": "11labs",
-            "voiceId": "pMsXgVXv3BLzUgSXRplE"
+        "assistant": {
+            "model": {
+                "provider": "openai",
+                "model": "gpt-4-turbo",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            f"You are an energetic sales agent representing our Lead Gen team. "
+                            f"The prospect you are speaking to is {customer_name}. "
+                            f"Your core objective is to pitch the following product offering: '{product_offering}'. "
+                            f"Target Context: We focus tightly on '{ideal_client_profile}'. "
+                            f"At the end of the call, try to extract their budget requirements or explicitly ask "
+                            f"what parameters they would need for a project quote so we can file it securely."
+                        )
+                    }
+                ]
+            },
+            "serverUrl": VAPI_SERVER_URL,
+            "voice": {
+                "provider": "11labs",
+                "voiceId": "pMsXgVXv3BLzUgSXRplE"
+            }
         }
     }
     
@@ -62,8 +64,8 @@ if __name__ == "__main__":
     # Example execution testing structure. TinyFish search scripts will inject data dynamically here:
     print("Please modify the customer_number in __main__ prior to testing!")
     trigger_outbound_call(
-        customer_number="+15551234567",
-        customer_name="John Prospect",
+        customer_number="+14697742043",
+        customer_name="Daniel Goodwyn",
         product_offering="Autonomous AI Workflows",
         ideal_client_profile="B2B saas startups"
     )
