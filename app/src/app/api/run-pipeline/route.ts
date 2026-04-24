@@ -91,8 +91,17 @@ async function runPipeline(runId: string, service: string, icp: string) {
   }
 
   // Step 2: parallel pain signal research — each call browses Google Maps → Yelp → website
+  // 90s timeout per prospect to prevent hangs from blocking script generation
+  const withTimeout = <T>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`timeout after ${ms}ms: ${label}`)), ms)
+      ),
+    ]);
+
   const painSignalTasks = raw.map((p, i) =>
-    findPainSignal(p.name, p.website, service)
+    withTimeout(findPainSignal(p.name, p.website, service), 90_000, p.name)
       .then((signal) => {
         if (signal) {
           publish(runId, { type: "pain_signal", index: i, painSignal: signal });
