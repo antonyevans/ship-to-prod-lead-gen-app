@@ -4,6 +4,7 @@ async function runTask(url: string, goal: string, maxSteps = 30): Promise<unknow
   const key = process.env.TINYFISH_API_KEY;
   if (!key) throw new Error("TINYFISH_API_KEY not set");
 
+  console.log(`[tinyfish] POST ${url.slice(0, 80)} (maxSteps=${maxSteps})`);
   const resp = await fetch(ENDPOINT, {
     method: "POST",
     headers: {
@@ -20,8 +21,11 @@ async function runTask(url: string, goal: string, maxSteps = 30): Promise<unknow
   });
 
   if (!resp.ok) {
-    throw new Error(`TinyFish ${resp.status}: ${await resp.text()}`);
+    const text = await resp.text();
+    console.error(`[tinyfish] error ${resp.status}: ${text}`);
+    throw new Error(`TinyFish ${resp.status}: ${text}`);
   }
+  console.log(`[tinyfish] stream open, reading SSE…`);
 
   const reader = resp.body!.getReader();
   const dec = new TextDecoder();
@@ -43,8 +47,10 @@ async function runTask(url: string, goal: string, maxSteps = 30): Promise<unknow
         const ev = JSON.parse(payload);
         if (ev.type === "COMPLETE") {
           if (ev.status !== "COMPLETED") throw new Error(`TinyFish: ${ev.error ?? "failed"}`);
+          console.log(`[tinyfish] COMPLETE — result:`, JSON.stringify(ev.result).slice(0, 200));
           return ev.result;
         }
+        if (ev.type === "HEARTBEAT") console.log(`[tinyfish] heartbeat`);
       } catch (e) {
         if (e instanceof Error && e.message.startsWith("TinyFish:")) throw e;
       }

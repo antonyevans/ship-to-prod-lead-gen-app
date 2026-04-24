@@ -64,8 +64,12 @@ async function saveCallStatus(runId: string, prospectIdx: number, status: string
 }
 
 async function runPipeline(runId: string, service: string, icp: string) {
+  console.log(`[pipeline:${runId.slice(0, 8)}] started — icp="${icp}"`);
+
   // Step 1: find 3 prospects via TinyFish Google search
+  console.log(`[pipeline:${runId.slice(0, 8)}] calling TinyFish findProspects…`);
   const raw = await findProspects(icp);
+  console.log(`[pipeline:${runId.slice(0, 8)}] findProspects returned ${raw.length} results:`, JSON.stringify(raw));
 
   if (raw.length === 0) {
     publish(runId, { type: "error", message: "TinyFish found no prospects for that ICP." });
