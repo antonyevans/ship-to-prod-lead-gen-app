@@ -1,25 +1,24 @@
 import type { Metadata } from 'next';
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 import './globals.css';
 
-const themeInitScript = `
-(() => {
-  try {
-    const storageKey = "insforge-theme";
-    const savedTheme = localStorage.getItem(storageKey) || "system";
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const resolvedTheme = savedTheme === "system"
-      ? (prefersDark ? "dark" : "light")
-      : savedTheme;
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['700', '800'],
+  variable: '--font-heading',
+  display: 'swap',
+});
 
-    document.documentElement.dataset.theme = resolvedTheme;
-    document.documentElement.style.colorScheme = resolvedTheme;
-  } catch {}
-})();
-`;
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-body',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: "Next.js InsForge Starter",
-  description: "A starter template for building Next.js apps with InsForge auth and data flows.",
+  title: 'Surfaced',
+  description: 'Find the wound. Open with the receipt.',
 };
 
 export default function RootLayout({
@@ -28,10 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

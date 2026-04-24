@@ -19,12 +19,12 @@ const EMPTY_PROSPECT = (index: number): Prospect => ({
 function callStatusLabel(status: CallStatus) {
   switch (status) {
     case "waiting": return "Waiting";
-    case "initiated": return "Call initiated...";
-    case "ringing": return "Ringing...";
+    case "initiated": return "Call initiated";
+    case "ringing": return "Ringing";
     case "answered": return "Answered";
     case "completed": return "Completed";
-    case "voicemail": return "Left voicemail — campaign continues";
-    case "no-answer": return "No answer — will retry";
+    case "voicemail": return "Left voicemail";
+    case "no-answer": return "No answer";
     case "failed": return "Failed";
   }
 }
@@ -32,37 +32,37 @@ function callStatusLabel(status: CallStatus) {
 function callStatusColor(status: CallStatus) {
   switch (status) {
     case "answered":
-    case "completed": return "text-green-400";
-    case "ringing":
-    case "initiated": return "text-yellow-400";
-    case "voicemail": return "text-blue-400";
-    case "no-answer": return "text-orange-400";
-    case "failed": return "text-red-400";
-    default: return "text-gray-500";
+    case "initiated":
+    case "ringing": return "text-flare";
+    case "completed": return "text-charcoal font-medium";
+    case "voicemail":
+    case "no-answer": return "text-stone";
+    case "failed": return "text-red-500";
+    default: return "text-stone";
   }
 }
 
 function ProspectCard({ prospect }: { prospect: Prospect }) {
   const hasName = prospect.name !== "";
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <div className="bg-white rounded-lg p-4 border border-sand">
       {hasName ? (
         <>
-          <p className="font-semibold text-white text-sm">{prospect.name}</p>
+          <p className="font-medium text-charcoal text-sm">{prospect.name}</p>
           {prospect.phone && (
-            <p className="text-xs text-gray-400 mt-0.5">{prospect.phone}</p>
+            <p className="text-xs text-stone mt-0.5">{prospect.phone}</p>
           )}
           {prospect.pain_signal && (
-            <div className="mt-2 bg-amber-950/50 border border-amber-800/50 rounded p-2">
-              <p className="text-xs text-amber-300 font-medium">Pain signal found</p>
-              <p className="text-xs text-amber-200 mt-0.5">{prospect.pain_signal}</p>
+            <div className="mt-2.5 bg-flare/5 border border-flare/20 rounded p-2.5">
+              <p className="text-xs text-flare font-medium">Signal found</p>
+              <p className="text-xs text-charcoal mt-0.5 leading-relaxed">{prospect.pain_signal}</p>
             </div>
           )}
         </>
       ) : (
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-          <p className="text-sm text-gray-400">Searching...</p>
+          <div className="w-2 h-2 rounded-full bg-flare animate-pulse" />
+          <p className="text-sm text-stone">Searching</p>
         </div>
       )}
     </div>
@@ -73,73 +73,73 @@ function ScriptCard({ prospect }: { prospect: Prospect }) {
   switch (prospect.scriptStatus) {
     case "waiting":
       return (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-          <p className="text-sm text-gray-500">Waiting...</p>
+        <div className="bg-white rounded-lg p-4 border border-sand">
+          <p className="text-sm text-stone">Waiting</p>
         </div>
       );
     case "generating":
       return (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-white rounded-lg p-4 border border-sand">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-            <p className="text-sm text-gray-300">Generating script...</p>
+            <div className="w-2 h-2 rounded-full bg-charcoal animate-pulse" />
+            <p className="text-sm text-charcoal">Writing script</p>
           </div>
-          {prospect.name && <p className="text-xs text-gray-500 mt-1">{prospect.name}</p>}
+          {prospect.name && <p className="text-xs text-stone mt-1">{prospect.name}</p>}
         </div>
       );
     case "ready":
       return (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 space-y-2">
-          <p className="text-xs font-medium text-purple-400">{prospect.name}</p>
-          <p className="text-xs text-gray-300">
-            <span className="text-gray-500">Opener: </span>
+        <div className="bg-white rounded-lg p-4 border border-sand space-y-2">
+          <p className="text-xs text-stone">{prospect.name}</p>
+          <p className="text-xs text-charcoal">
+            <span className="text-stone">Opener: </span>
             {prospect.script?.opener}
           </p>
           {prospect.script?.pain_hook && (
-            <p className="text-xs text-amber-300">
-              <span className="text-gray-500">Hook: </span>
+            <p className="text-xs text-flare">
+              <span className="text-stone">Hook: </span>
               {prospect.script.pain_hook}
             </p>
           )}
-          <p className="text-xs text-gray-400">
-            <span className="text-gray-500">Pitch: </span>
+          <p className="text-xs text-charcoal">
+            <span className="text-stone">Pitch: </span>
             {prospect.script?.service_pitch}
           </p>
         </div>
       );
     case "failed":
       return (
-        <div className="bg-gray-800 rounded-lg p-4 border border-red-800/50">
-          <p className="text-sm text-red-400">Script generation failed — using template</p>
+        <div className="bg-white rounded-lg p-4 border border-red-200">
+          <p className="text-sm text-red-500">Script failed — using template</p>
         </div>
       );
   }
 }
 
 function CallCard({ prospect }: { prospect: Prospect }) {
-  const isActive = prospect.callStatus !== "waiting";
+  const isActive = prospect.callStatus !== "waiting" && prospect.callStatus !== "completed";
+  const CALL_STAGES: CallStatus[] = ["initiated", "ringing", "answered"];
+  const stageIdx = CALL_STAGES.indexOf(prospect.callStatus);
+
   return (
     <div
-      className={`bg-gray-800 rounded-lg p-4 border ${
-        isActive ? "border-green-700/50" : "border-gray-700"
+      className={`bg-white rounded-lg p-4 border ${
+        isActive ? "border-flare/30" : "border-sand"
       }`}
     >
       {prospect.name ? (
         <>
-          <p className="text-xs text-gray-400 mb-1">{prospect.name}</p>
-          <p className={`text-sm font-medium ${callStatusColor(prospect.callStatus)}`}>
+          <p className="text-xs text-stone mb-1">{prospect.name}</p>
+          <p className={`text-sm ${callStatusColor(prospect.callStatus)}`}>
             {callStatusLabel(prospect.callStatus)}
           </p>
-          {(prospect.callStatus === "ringing" || prospect.callStatus === "answered") && (
-            <div className="mt-2 flex gap-1">
-              {["initiated", "ringing", "answered"].map((s) => (
+          {stageIdx >= 0 && (
+            <div className="mt-2.5 flex gap-1">
+              {CALL_STAGES.map((s, i) => (
                 <div
                   key={s}
-                  className={`h-1.5 flex-1 rounded-full ${
-                    ["initiated", "ringing", "answered"].indexOf(s) <=
-                    ["initiated", "ringing", "answered"].indexOf(prospect.callStatus)
-                      ? "bg-green-500"
-                      : "bg-gray-600"
+                  className={`h-1 flex-1 rounded-full ${
+                    i <= stageIdx ? "bg-flare" : "bg-sand"
                   }`}
                 />
               ))}
@@ -147,7 +147,7 @@ function CallCard({ prospect }: { prospect: Prospect }) {
           )}
         </>
       ) : (
-        <p className="text-sm text-gray-500">Waiting</p>
+        <p className="text-sm text-stone">Waiting</p>
       )}
     </div>
   );
@@ -229,27 +229,28 @@ function PipelineInner() {
   }, [runId]);
 
   return (
-    <main className="min-h-screen bg-gray-950 p-6">
+    <main className="min-h-screen bg-warm-white p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">Pipeline running</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Finding CPA firms in Memphis · Detecting pain signals · Placing calls
+            <a href="/" className="font-heading text-xl font-bold text-charcoal tracking-tight">
+              surfaced<span className="text-flare">·</span>
+            </a>
+            <p className="text-stone text-sm mt-1">
+              Pipeline running
             </p>
           </div>
           {done && (
-            <span className="bg-green-900/50 border border-green-700 text-green-300 text-sm px-3 py-1.5 rounded-full">
+            <span className="bg-flare/10 border border-flare/30 text-flare text-sm px-3 py-1.5 rounded-full">
               Pipeline complete
             </span>
           )}
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          {/* Researching column */}
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-flare" />
               Researching
             </h2>
             <div className="space-y-3">
@@ -259,11 +260,10 @@ function PipelineInner() {
             </div>
           </div>
 
-          {/* Writing Script column */}
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-500" />
-              Writing Script
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-charcoal" />
+              Writing script
             </h2>
             <div className="space-y-3">
               {prospects.map((p) => (
@@ -272,10 +272,9 @@ function PipelineInner() {
             </div>
           </div>
 
-          {/* Calling column */}
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-charcoal" />
               Calling
             </h2>
             <div className="space-y-3">
@@ -286,8 +285,8 @@ function PipelineInner() {
           </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <a href="/" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+        <div className="mt-10 text-center">
+          <a href="/" className="text-sm text-stone hover:text-charcoal transition-colors">
             ← Run another pipeline
           </a>
         </div>
@@ -298,7 +297,7 @@ function PipelineInner() {
 
 export default function PipelinePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-950" />}>
+    <Suspense fallback={<div className="min-h-screen bg-warm-white" />}>
       <PipelineInner />
     </Suspense>
   );

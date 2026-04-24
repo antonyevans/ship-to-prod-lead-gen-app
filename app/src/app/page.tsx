@@ -31,16 +31,20 @@ export default function ConfigPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+    <main className="min-h-screen bg-warm-white flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
-        <h1 className="text-3xl font-bold text-white mb-2">AI Lead Gen Agent</h1>
-        <p className="text-gray-400 mb-8">
-          Find prospects, detect pain signals, place personalized calls — in under 3 minutes.
-        </p>
+        <div className="mb-10">
+          <p className="font-heading text-4xl font-bold text-charcoal tracking-tight">
+            surfaced<span className="text-flare">·</span>
+          </p>
+          <p className="text-stone mt-2 text-[15px]">
+            Find the wound. Open with the receipt.
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1.5">
               What AI service do you sell?
             </label>
             <textarea
@@ -49,14 +53,14 @@ export default function ConfigPage() {
               maxLength={200}
               rows={3}
               required
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 text-white px-4 py-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
+              className="w-full rounded-lg bg-white border border-sand text-charcoal px-4 py-3 text-sm focus:outline-none focus:border-flare resize-none placeholder:text-stone"
               placeholder="AI scheduling service that books client consultations..."
             />
-            <p className="text-xs text-gray-500 mt-1">{service.length}/200</p>
+            <p className="text-xs text-stone mt-1">{service.length}/200</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1.5">
               Who is your target customer?
             </label>
             <input
@@ -65,20 +69,24 @@ export default function ConfigPage() {
               onChange={(e) => setIcp(e.target.value)}
               maxLength={100}
               required
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 text-white px-4 py-3 text-sm focus:outline-none focus:border-blue-500"
+              className="w-full rounded-lg bg-white border border-sand text-charcoal px-4 py-3 text-sm focus:outline-none focus:border-flare placeholder:text-stone"
               placeholder="CPA firms in Memphis TN with 2-15 staff"
             />
-            <p className="text-xs text-gray-500 mt-1">{icp.length}/100</p>
+            <p className="text-xs text-stone mt-1">{icp.length}/100</p>
           </div>
 
           <button
             type="submit"
             disabled={loading || !service.trim() || !icp.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
+            className="w-full bg-flare hover:bg-flare/90 disabled:opacity-40 disabled:cursor-not-allowed text-warm-white font-semibold py-3 rounded-lg transition-colors text-sm"
           >
-            {loading ? "Starting pipeline..." : "Find leads and call them"}
+            {loading ? "Finding signals..." : "Find leads and call them"}
           </button>
         </form>
+
+        <p className="mt-8 text-xs text-stone text-center">
+          Config to completed call in under 3 minutes.
+        </p>
       </div>
     </main>
   );
