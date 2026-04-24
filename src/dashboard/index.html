@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Lead Gen Agent</title>
+    <!-- Modern Typography: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="blob-gradient blob-1"></div>
+    <div class="blob-gradient blob-2"></div>
+    
+    <div class="app-container">
+        <header>
+            <h1>Agentic <span>Lead Gen</span></h1>
+            <p>Deploy your autonomous voice agent to qualify your ideal prospects.</p>
+        </header>
+
+        <main>
+            <!-- Setup Form -->
+            <section id="campaign-setup" class="glass-card fade-in">
+                <h2>Campaign Configuration</h2>
+                <form id="agent-form">
+                    <div class="input-group">
+                        <label for="agent-name">Agent Identity (Your Name)</label>
+                        <input type="text" id="agent-name" placeholder="e.g. Daniel Goodwyn" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="product-offering">Core Offering / Pitch</label>
+                        <textarea id="product-offering" rows="3" placeholder="e.g. We build autonomous AI workflows to scale B2B operations..." required></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="ideal-profile">Ideal Client Profile (ICP)</label>
+                        <textarea id="ideal-profile" rows="2" placeholder="e.g. Fast-growing tech startups raising Series A..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="primary-btn pulse-hover">Deploy Voice Agent</button>
+                </form>
+            </section>
+
+            <!-- Live Database Output -->
+            <section id="live-dashboard" class="glass-card hidden">
+                <div class="dashboard-header">
+                    <h2>Live Client Database</h2>
+                    <div class="status-indicator">
+                        <div class="pulse-dot"></div>
+                        <span>Agent Active</span>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="leads-table">
+                        <thead>
+                            <tr>
+                                <th>Target Lead</th>
+                                <th>Phone Number</th>
+                                <th>Call Status</th>
+                                <th>Quote & Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-body">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

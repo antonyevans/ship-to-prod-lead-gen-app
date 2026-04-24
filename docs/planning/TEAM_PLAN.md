@@ -33,9 +33,11 @@ This project will utilize at least 3 sponsor tools (as required by the judging c
 ## Missing Parts to Complete
 To make sure we finish before the 4:30 PM deadline, we need to address:
 1. **Frontend Dashboard:** Who is building the UI for the user to input their data and view the output dashboard? (We could use something quick like Streamlit or Vercel/React).
-2. **Monetization Requirement:** The hackathon rules require us to monetize the agent with payment rails (x402, MPP, CDP, or agentic.market). We need to choose one and integrate it.
-3. **Publish to `cited.md`:** We need to ensure the agent's output publishes to `cited.md` at the end of the pipeline.
-4. **Hackathon Tokens & API Keys:** We need a central `.env` to share API tokens for Vapi, TinyFish, and InsForge.
+2. **Hackathon Tokens & API Keys:** We need a central `.env` to share API tokens for Vapi, TinyFish, and InsForge.
+
+### Optional Challenges
+* **Monetization Requirement:** The hackathon rules suggest monetizing the agent with payment rails (x402, MPP, CDP, or agentic.market). 
+* **Publish to `cited.md`:** We can ensure the agent's output publishes to `cited.md` at the end of the pipeline.
 
 ## Submission Guide
 * **Deadline:** 4:30 PM today (April 24, 2026). Demos begin at 4:30 PM.
