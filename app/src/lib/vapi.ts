@@ -15,27 +15,11 @@ export async function placeVapiCall(
   script: Script,
   runId: string
 ): Promise<VapiCallResult> {
-  const systemPrompt = [
-    `You are a friendly sales representative calling ${prospectName}.`,
-    `Opener: ${script.opener}`,
-    script.pain_hook ? `Pain hook: ${script.pain_hook}` : "",
-    `Service pitch: ${script.service_pitch}`,
-    `Objection handling: ${script.objection_answer}`,
-    `Call to action: ${script.cta}`,
-    "Keep the call under 3 minutes. Be warm, natural, and conversational.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-
   const payload = {
     phoneNumberId: VAPI_PHONE_NUMBER_ID,
     assistantId: VAPI_ASSISTANT_ID,
     assistantOverrides: {
       firstMessage: script.opener,
-      model: {
-        messages: [{ role: "system", content: systemPrompt }],
-      },
-      serverUrl: VAPI_WEBHOOK_URL,
     },
     customer: { number: phone, name: prospectName },
     metadata: { run_id: runId },
