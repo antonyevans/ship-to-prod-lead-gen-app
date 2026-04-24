@@ -1,6 +1,7 @@
 import { publish } from "@/lib/run-store";
 import { createInsforgeServerClient } from "@/lib/insforge";
 import { findProspects, findPainSignal } from "@/lib/tinyfish";
+import { placeVapiCall } from "@/lib/vapi";
 import type { PipelineConfig, Script } from "@/lib/pipeline-types";
 
 export async function POST(request: Request) {
@@ -139,17 +140,36 @@ async function runPipeline(runId: string, service: string, icp: string) {
     });
   }
 
-  // Step 4: VAPI call for prospect 0 (simulated — real VAPI wiring is next)
-  const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  for (const [status, wait] of [
-    ["initiated", 500],
-    ["ringing", 1500],
-    ["answered", 2000],
-    ["completed", 3000],
-  ] as const) {
-    await delay(wait);
-    publish(runId, { type: "call_status", index: 0, status });
-    await saveCallStatus(runId, 0, status);
+  // Step 4: place real VAPI calls for all prospects that have a phone number
+  for (let i = 0; i < raw.length; i++) {
+    const prospect = raw[i];
+    const script = (
+      await createInsforgeServerClient()
+        .database.from("prospects")
+        .select("script_json")
+        .eq("run_id", runId)
+        .eq("idx", i)
+        .single()
+        .then(({ data }) => data)
+    )?.script_json as Script | null;
+
+    if (!prospect.phone || !script) {
+      publish(runId, { type: "call_status", index: i, status: "failed" });
+      continue;
+    }
+
+    publish(runId, { type: "call_status", index: i, status: "initiated" });
+    await saveCallStatus(runId, i, "initiated");
+
+    try {
+      const { callId } = await placeVapiCall(prospect.phone, prospect.name, script, runId);
+      await saveCallStatus(runId, i, "initiated", callId);
+      console.log(`[pipeline:${runId.slice(0, 8)}] VAPI call placed for ${prospect.name} — callId=${callId}`);
+    } catch (err) {
+      console.error(`[pipeline:${runId.slice(0, 8)}] VAPI call failed for ${prospect.name}:`, err);
+      publish(runId, { type: "call_status", index: i, status: "failed" });
+      await saveCallStatus(runId, i, "failed");
+    }
   }
 
   publish(runId, { type: "done" });
