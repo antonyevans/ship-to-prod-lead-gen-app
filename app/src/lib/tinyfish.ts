@@ -85,6 +85,13 @@ export interface RawProspect {
   website: string;
 }
 
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits[0] === "1") return `+${digits}`;
+  return raw; // return as-is if we can't normalize
+}
+
 export async function findProspects(icp: string): Promise<RawProspect[]> {
   const url = `https://www.google.com/search?q=${encodeURIComponent(icp)}`;
 
@@ -93,7 +100,7 @@ Find exactly 3 real businesses matching: "${icp}".
 
 For each extract:
 - name: the business name
-- phone: their phone number formatted as +1XXXXXXXXXX
+- phone: their phone number (any format is fine)
 - website: their website URL (empty string if not found)
 
 Only include businesses with a real, extractable phone number. Skip any without one and find a replacement.
@@ -103,8 +110,21 @@ Return ONLY a JSON array of exactly 3 objects with no other text:
 `.trim();
 
   const raw = await runTask(url, goal, 30);
-  const results = extractJson<RawProspect[]>(raw);
-  return (Array.isArray(results) ? results : []).slice(0, 3);
+
+  // TinyFish may return {entries:[...]} or a flat array
+  type ResultShape = RawProspect[] | { entries: RawProspect[] } | { results: RawProspect[] };
+  const parsed = extractJson<ResultShape>(raw);
+  const arr: RawProspect[] = Array.isArray(parsed)
+    ? parsed
+    : (parsed as { entries?: RawProspect[]; results?: RawProspect[] })?.entries ??
+      (parsed as { results?: RawProspect[] })?.results ??
+      [];
+
+  return arr.slice(0, 3).map((p) => ({
+    name: String(p.name ?? ""),
+    phone: normalizePhone(String(p.phone ?? "")),
+    website: String(p.website ?? ""),
+  }));
 }
 
 // ---------------------------------------------------------------------------

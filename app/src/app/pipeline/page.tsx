@@ -162,6 +162,7 @@ function PipelineInner() {
     EMPTY_PROSPECT(2),
   ]);
   const [done, setDone] = useState(false);
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -215,6 +216,9 @@ function PipelineInner() {
               ...next[event.index],
               callStatus: event.status,
             };
+            break;
+          case "error":
+            setPipelineError(event.message);
             break;
           case "done":
             setDone(true);
@@ -284,6 +288,13 @@ function PipelineInner() {
             </div>
           </div>
         </div>
+
+        {pipelineError && (
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-600 font-medium">Pipeline error</p>
+            <p className="text-xs text-red-500 mt-0.5">{pipelineError}</p>
+          </div>
+        )}
 
         <div className="mt-10 text-center">
           <a href="/" className="text-sm text-stone hover:text-charcoal transition-colors">
