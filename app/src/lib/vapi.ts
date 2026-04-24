@@ -2,6 +2,7 @@ import type { Script } from "@/lib/pipeline-types";
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!;
 const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID!;
+const VAPI_ASSISTANT_ID = process.env.VAPI_ASSISTANT_ID!;
 const VAPI_WEBHOOK_URL = process.env.VAPI_WEBHOOK_URL ?? "";
 
 export interface VapiCallResult {
@@ -28,16 +29,15 @@ export async function placeVapiCall(
 
   const payload = {
     phoneNumberId: VAPI_PHONE_NUMBER_ID,
-    customer: { number: phone, name: prospectName },
-    assistant: {
+    assistantId: VAPI_ASSISTANT_ID,
+    assistantOverrides: {
+      firstMessage: script.opener,
       model: {
-        provider: "anthropic",
-        model: "claude-haiku-4-5-20251001",
         messages: [{ role: "system", content: systemPrompt }],
       },
-      firstMessage: script.opener,
       serverUrl: VAPI_WEBHOOK_URL,
     },
+    customer: { number: phone, name: prospectName },
     metadata: { run_id: runId },
   };
 
