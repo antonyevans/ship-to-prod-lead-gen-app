@@ -142,11 +142,18 @@ export async function findPainSignal(
   website: string,
   service: string
 ): Promise<string | null> {
-  const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
+  // If we have the website, go there directly — skip the Maps search step
+  const hasWebsite = website && website.startsWith("http");
+  const startUrl = hasWebsite
+    ? website
+    : `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
 
-  const goal = `Search Google Maps for "${name}". Read their customer reviews. Find a specific complaint about: missed calls, voicemail, slow response, booking difficulty, or after-hours problems. If found, return JSON: {"painSignal":"exact review quote","source":"Google Maps"}. If not found, return {"painSignal":null,"source":"none"}`;
+  const goal = hasWebsite
+    ? `You are on the website for "${name}". Look for evidence they struggle with: missed calls, no online booking, voicemail only, slow response, or after-hours problems. Check: is there an online booking or scheduling link? Any "call us" instructions without a digital alternative? Then navigate to their Google Maps listing and read customer reviews for complaints about the same issues. Return JSON: {"painSignal":"exact quote or specific observation","source":"website or Google Maps"}. If nothing found: {"painSignal":null,"source":"none"}`
+    : `Search Google Maps for "${name}". Read their customer reviews. Find a specific complaint about: missed calls, voicemail, slow response, booking difficulty, or after-hours problems. If found, return JSON: {"painSignal":"exact review quote","source":"Google Maps"}. If not found, return {"painSignal":null,"source":"none"}`;
 
-  const raw = await runTask(mapsUrl, goal, 25);
+  console.log(`[tinyfish] pain signal for ${name} — starting at ${hasWebsite ? "website" : "Maps search"}`);
+  const raw = await runTask(startUrl, goal, 25);
   const parsed = extractJson<PainResult>(raw);
   return parsed?.painSignal ?? null;
 }
