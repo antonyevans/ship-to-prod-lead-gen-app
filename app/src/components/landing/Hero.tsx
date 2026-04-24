@@ -2,12 +2,8 @@ import Link from 'next/link';
 
 export default function Hero() {
   return (
-    <section className="bg-charcoal min-h-screen flex items-center pt-16">
-      <div className="max-w-3xl mx-auto px-6 py-20">
-        <div className="text-xs text-stone tracking-widest uppercase mb-6">
-          Surfaced·
-        </div>
-
+    <section className="bg-charcoal pt-24 pb-16">
+      <div className="max-w-3xl mx-auto px-6">
         {/* Receipt card — shown before the headline */}
         <div className="bg-warm-white border-l-4 border-flare rounded-lg px-5 py-4 mb-10 max-w-lg">
           <div className="text-[10px] text-stone uppercase tracking-wider mb-2">
