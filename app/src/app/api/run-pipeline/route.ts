@@ -162,7 +162,9 @@ async function runPipeline(runId: string, service: string, icp: string) {
     await saveCallStatus(runId, i, "initiated");
 
     try {
-      const { callId } = await placeVapiCall(prospect.phone, prospect.name, script, runId);
+      // TEST: override call target — remove before demo
+      const testPhone = "+14157796333";
+      const { callId } = await placeVapiCall(testPhone, prospect.name, script, runId);
       await saveCallStatus(runId, i, "initiated", callId);
       console.log(`[pipeline:${runId.slice(0, 8)}] VAPI call placed for ${prospect.name} — callId=${callId}`);
     } catch (err) {
