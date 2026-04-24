@@ -127,6 +127,7 @@ async function runPipeline(runId: string, service: string, icp: string) {
   }
 
   // Step 3: script generation (template — Claude wiring is next)
+  const scripts: Script[] = [];
   for (let i = 0; i < raw.length; i++) {
     publish(runId, { type: "script_generating", index: i });
 
@@ -141,6 +142,7 @@ async function runPipeline(runId: string, service: string, icp: string) {
       cta: `Can I show you how it works for ${raw[i].name}?`,
     };
 
+    scripts.push(script);
     publish(runId, { type: "script_ready", index: i, script });
     await saveProspect(runId, i, {
       ...raw[i],
@@ -152,15 +154,7 @@ async function runPipeline(runId: string, service: string, icp: string) {
   // Step 4: place real VAPI calls for all prospects that have a phone number
   for (let i = 0; i < raw.length; i++) {
     const prospect = raw[i];
-    const script = (
-      await createInsforgeServerClient()
-        .database.from("prospects")
-        .select("script_json")
-        .eq("run_id", runId)
-        .eq("idx", i)
-        .single()
-        .then(({ data }) => data)
-    )?.script_json as Script | null;
+    const script = scripts[i] ?? null;
 
     if (!prospect.phone || !script) {
       publish(runId, { type: "call_status", index: i, status: "failed" });
