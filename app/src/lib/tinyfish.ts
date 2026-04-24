@@ -99,14 +99,15 @@ export async function findProspects(icp: string): Promise<RawProspect[]> {
 
   const raw = await runTask(url, goal, 20);
 
-  // TinyFish may return {entries:[...]} or a flat array
-  type ResultShape = RawProspect[] | { entries: RawProspect[] } | { results: RawProspect[] };
-  const parsed = extractJson<ResultShape>(raw);
-  const arr: RawProspect[] = Array.isArray(parsed)
-    ? parsed
-    : (parsed as { entries?: RawProspect[]; results?: RawProspect[] })?.entries ??
-      (parsed as { results?: RawProspect[] })?.results ??
-      [];
+  // TinyFish wraps arrays inconsistently: {entries:[]}, {result:[]}, {results:[]}, or bare []
+  const parsed = extractJson<unknown>(raw);
+  let arr: RawProspect[] = [];
+  if (Array.isArray(parsed)) {
+    arr = parsed as RawProspect[];
+  } else if (parsed && typeof parsed === "object") {
+    const firstArray = Object.values(parsed).find(Array.isArray);
+    if (firstArray) arr = firstArray as RawProspect[];
+  }
 
   return arr.slice(0, 3).map((p) => ({
     name: String(p.name ?? ""),
