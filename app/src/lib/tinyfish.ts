@@ -92,10 +92,22 @@ function normalizePhone(raw: string): string {
   return raw; // return as-is if we can't normalize
 }
 
-export async function findProspects(icp: string): Promise<RawProspect[]> {
-  const url = `https://www.google.com/search?q=${encodeURIComponent(icp)}`;
+function yellowPagesUrl(icp: string): string {
+  // Extract "X in Y" pattern: "CPA firms in Memphis TN with 2-15 staff" → search_terms=CPA firms&geo=Memphis TN
+  const m = icp.match(/^(.+?)\s+in\s+([^,]+?)(\s+with\s+.+)?$/i);
+  if (m) {
+    const terms = encodeURIComponent(m[1].trim());
+    const geo = encodeURIComponent(m[2].trim());
+    return `https://www.yellowpages.com/search?search_terms=${terms}&geo_location_terms=${geo}`;
+  }
+  return `https://www.yellowpages.com/search?search_terms=${encodeURIComponent(icp)}`;
+}
 
-  const goal = `Find 3 businesses matching: "${icp}". For each extract name, phone number, and website. Return only a JSON array: [{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."}]`;
+export async function findProspects(icp: string): Promise<RawProspect[]> {
+  const url = yellowPagesUrl(icp);
+  console.log(`[tinyfish] prospect discovery URL: ${url}`);
+
+  const goal = `Find 3 businesses in these search results. For each extract name, phone number, and website. Return only a JSON array: [{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."}]`;
 
   const raw = await runTask(url, goal, 20);
 
