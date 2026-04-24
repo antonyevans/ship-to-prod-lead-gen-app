@@ -1,68 +1,57 @@
 # Vapi + Twilio Voice Integration Handoff
 
-This document outlines the final state of the Vapi Voice Agent integration so the rest of the team can seamlessly wire it into the production Next.js backend.
+> **Updated:** 2026-04-24 4:35 PM CT — Phone number re-imported with proper Twilio credentials. Outbound calls confirmed working.
 
-## 1. Environment Variables Required
-Daniel has successfully provisioned a Twilio phone number and linked it to the Vapi project. For the Next.js production backend to initiate outbound calls via the Vapi API, you **must add the following keys to your Vercel (or Insforge) Environment Variables**:
+## 1. What Changed
+
+- **Phone Number ID changed.** The old ID (`6be348ab...`) was deleted and re-imported with Twilio credentials attached. The new ID is below.
+- **Riley assistant configured.** There is now a persistent assistant (`Riley - Surfaced Sales Agent`) in the Vapi dashboard with the full lead gen prompt, evidence-first selling approach, and objection handling. You can use `assistantId` instead of inline assistant configs.
+- **Outbound calls confirmed working** via Twilio provider. Free Vapi numbers do NOT work for outbound — must use Twilio.
+
+## 2. Environment Variables Required (Fly.io)
+
+Update these on your Fly.io deployment:
 
 ```env
-# Daniel's Vapi API Key (required to authorize calls)
 VAPI_API_KEY=<SEE_DISCORD_CHAT>
-
-# The UUID of the Twilio Phone Number imported into Vapi (required for outbound)
-VAPI_PHONE_NUMBER_ID=<SEE_DISCORD_CHAT>
+VAPI_PHONE_NUMBER_ID=e1685855-60a6-4a5b-8b0c-fad8e4453c89
+VAPI_ASSISTANT_ID=8ae795f1-58a6-4eb1-9e78-8b62ea705d96
+VAPI_WEBHOOK_URL=https://v3b4dapw.insforge.site/api/vapi-status
 ```
 
-## 2. Webhook Configuration
-The Vapi assistant is currently configured to send live call events (transcripts, status updates, completion payloads) to our production webhook:
-`https://v3b4dapw.insforge.site/api/vapi-status`
+## 3. Two Ways to Place a Call
 
-Ensure your `route.ts` at that endpoint is ready to accept `POST` requests and parse the `body.transcript` and `body.status` fields.
-
-## 3. Triggering Outbound Calls
-To initiate a call from the Next.js backend (e.g., inside `run-pipeline/route.ts`), you can use the exact JSON schema we validated in Python. Here is the TypeScript equivalent using `fetch`:
-
+### Option A: Use `assistantId` (recommended — uses Riley's dashboard config)
 ```typescript
-const triggerCall = async (customerName: string, customerPhone: string) => {
-  const response = await fetch("https://api.vapi.ai/call", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.VAPI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID,
-      customer: {
-        number: customerPhone // Must be E.164 format (e.g., +14697742043)
-      },
-      assistant: {
-        model: {
-          provider: "openai",
-          model: "gpt-4-turbo",
-          messages: [
-            {
-              role: "system",
-              content: `You are an energetic sales agent representing our Lead Gen team. The prospect you are speaking to is ${customerName}. Your core objective is to pitch the product and extract budget requirements.`
-            }
-          ]
-        },
-        serverUrl: "https://v3b4dapw.insforge.site/api/vapi-status",
-        voice: {
-          provider: "11labs",
-          voiceId: "pMsXgVXv3BLzUgSXRplE"
-        }
-      }
-    })
-  });
-
-  const data = await response.json();
-  return data;
-};
+const res = await fetch("https://api.vapi.ai/call", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.VAPI_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    assistantId: process.env.VAPI_ASSISTANT_ID,
+    phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID,
+    customer: { number: customerPhone }, // E.164 format
+  }),
+});
 ```
 
-## 4. Final Checklist for Team
-- [ ] Add the two ENV variables to production.
-- [ ] Ensure `run-pipeline` executes the outbound call fetch request above.
-- [ ] Verify `vapi-status` webhook correctly persists transcripts to the Insforge database.
+### Option B: Use inline assistant (current approach in `vapi.ts`)
+Works fine — just make sure `VAPI_PHONE_NUMBER_ID` is updated to the new value above.
+
+## 4. Important Notes
+
+- **Twilio is a trial account** — can only call verified numbers. For the demo, the test override number must be verified in the Twilio console.
+- **Free Vapi numbers DO NOT work for outbound.** They get blocked by carrier spam filters. Always use the Twilio number.
+- **Riley's prompt** is configured in the Vapi dashboard. It includes: evidence-first opener, pain hook, automation pitch, objection handling, and CTA to book a follow-up demo. You can edit it at https://dashboard.vapi.ai/assistants.
+- **Server URL** is set on Riley to `https://v3b4dapw.insforge.site/api/vapi-status` so transcripts are sent to the backend automatically.
+
+## 5. Final Checklist
+- [ ] Update `VAPI_PHONE_NUMBER_ID` on Fly.io to `e1685855-60a6-4a5b-8b0c-fad8e4453c89`
+- [ ] Optionally add `VAPI_ASSISTANT_ID` env var and switch `vapi.ts` to use it
+- [ ] Verify the test override number is verified in Twilio (for trial account)
+- [ ] Run end-to-end pipeline test from the dashboard
+- [ ] Confirm transcripts arrive at `/api/vapi-status` webhook
 
 Happy hacking! 🚀
