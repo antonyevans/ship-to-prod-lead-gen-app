@@ -64,8 +64,8 @@ if __name__ == "__main__":
     # Example execution testing structure. TinyFish search scripts will inject data dynamically here:
     print("Please modify the customer_number in __main__ prior to testing!")
     trigger_outbound_call(
-        customer_number="+14697742043",
-        customer_name="Daniel Goodwyn",
+        customer_number=os.getenv("TEST_CUSTOMER_NUMBER", "+10000000000"),
+        customer_name=os.getenv("TEST_CUSTOMER_NAME", "Test User"),
         product_offering="Autonomous AI Workflows",
         ideal_client_profile="B2B saas startups"
     )
