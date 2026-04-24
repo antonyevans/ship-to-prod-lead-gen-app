@@ -95,21 +95,9 @@ function normalizePhone(raw: string): string {
 export async function findProspects(icp: string): Promise<RawProspect[]> {
   const url = `https://www.google.com/search?q=${encodeURIComponent(icp)}`;
 
-  const goal = `
-Find exactly 3 real businesses matching: "${icp}".
+  const goal = `Find 3 businesses matching: "${icp}". For each extract name, phone number, and website. Return only a JSON array: [{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."}]`;
 
-For each extract:
-- name: the business name
-- phone: their phone number (any format is fine)
-- website: their website URL (empty string if not found)
-
-Only include businesses with a real, extractable phone number. Skip any without one and find a replacement.
-
-Return ONLY a JSON array of exactly 3 objects with no other text:
-[{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."},{"name":"...","phone":"...","website":"..."}]
-`.trim();
-
-  const raw = await runTask(url, goal, 30);
+  const raw = await runTask(url, goal, 20);
 
   // TinyFish may return {entries:[...]} or a flat array
   type ResultShape = RawProspect[] | { entries: RawProspect[] } | { results: RawProspect[] };
@@ -143,38 +131,9 @@ export async function findPainSignal(
 ): Promise<string | null> {
   const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
 
-  const websiteStep = website
-    ? `3. Visit ${website} — look for: missing booking page, no online scheduling link, after-hours contact form absent, old "call us" instructions without any digital alternative.`
-    : "";
+  const goal = `Search Google Maps for "${name}". Read their customer reviews. Find a specific complaint about: missed calls, voicemail, slow response, booking difficulty, or after-hours problems. If found, return JSON: {"painSignal":"exact review quote","source":"Google Maps"}. If not found, return {"painSignal":null,"source":"none"}`;
 
-  const goal = `
-You are researching "${name}" to find specific evidence that they need: "${service}".
-
-Work through each source in order:
-
-1. On Google Maps, find "${name}". Read their customer reviews carefully. Look for complaints about:
-   - Calls going to voicemail or not being answered
-   - Long wait times to get a callback or appointment
-   - Difficulty booking, no online booking option
-   - Problems reaching them outside business hours
-   - Any frustration with their responsiveness or scheduling
-   Copy the most compelling quote verbatim if you find one.
-
-2. Search Yelp for "${name}". Read their reviews for the same patterns.
-   Also check for: low star ratings specifically mentioning communication or booking, recent negative reviews about availability.
-${websiteStep}
-
-After checking all sources, pick the single most specific, verifiable piece of evidence.
-Prefer exact review quotes over observations. Prefer recent evidence over old.
-
-Return ONLY this JSON, no other text:
-{"painSignal":"the exact quote or specific observation","source":"Google Maps/Yelp/website"}
-
-If you found NO relevant evidence after checking all sources:
-{"painSignal":null,"source":"none"}
-`.trim();
-
-  const raw = await runTask(mapsUrl, goal, 60);
+  const raw = await runTask(mapsUrl, goal, 25);
   const parsed = extractJson<PainResult>(raw);
   return parsed?.painSignal ?? null;
 }
