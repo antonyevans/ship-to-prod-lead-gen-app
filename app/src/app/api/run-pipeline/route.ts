@@ -151,8 +151,8 @@ async function runPipeline(runId: string, service: string, icp: string) {
     });
   }
 
-  // Step 4: place real VAPI calls for all prospects that have a phone number
-  for (let i = 0; i < raw.length; i++) {
+  // Step 4: place VAPI call for first prospect only (demo mode)
+  for (let i = 0; i < Math.min(1, raw.length); i++) {
     const prospect = raw[i];
     const script = scripts[i] ?? null;
 
